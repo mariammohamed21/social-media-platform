@@ -1,0 +1,7 @@
+import { useEffect, useState } from 'react';
+import api from '../../services/api.js';
+export default function Messages(){const [convs,setConvs]=useState([]); const [messages,setMessages]=useState([]); const [active,setActive]=useState(null); const [receiverId,setReceiverId]=useState(''); const [text,setText]=useState('');
+ useEffect(()=>{api.get('/messages/conversations').then(r=>setConvs(r.data))},[]);
+ const open=async c=>{setActive(c); const {data}=await api.get(`/messages/${c._id}`); setMessages(data)};
+ const send=async e=>{e.preventDefault(); const rid=active?.participants?.find(p=>true)?._id || receiverId; if(!rid||!text)return; const {data}=await api.post('/messages',{receiverId:rid,text}); setMessages([...messages,data]); setText('')};
+ return <div className="row"><div className="col-md-4"><h4>Conversations</h4>{convs.map(c=><button className="list-group-item list-group-item-action" key={c._id} onClick={()=>open(c)}>{c.participants.map(p=>p.name).join(', ')}</button>)}<input className="form-control mt-3" placeholder="Receiver user ID" value={receiverId} onChange={e=>setReceiverId(e.target.value)}/></div><div className="col-md-8"><h4>Chat</h4><div className="chat-box">{messages.map(m=><div key={m._id} className="message-bubble"><b>{m.sender?.name}: </b>{m.text}</div>)}</div><form onSubmit={send} className="d-flex gap-2 mt-2"><input className="form-control" value={text} onChange={e=>setText(e.target.value)} placeholder="Message"/><button className="btn btn-primary">Send</button></form></div></div>}
